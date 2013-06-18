@@ -1,0 +1,79 @@
+<html>
+<head>
+<title>Robots. Woohoo.</title>
+<script src='jquery-1.7.2.min.js'></script>
+<script>
+jQuery(document).ready(function(){
+    load_js_file('all_runs.js');
+});
+var steps_index = 0;
+var robot_data = 0;
+var robot_html = "<div id='robot' style=\"background-image:url('car.gif');position:fixed;top:0px;left:0px;z-index:999999;width:32px;height:32px;\"></div>";
+var load_new_run = "";
+var run_in_progress = 0;
+
+function load_run(data)
+{
+    robot_data = data;
+    jQuery('#map').css('background-image', "url('"+robot_data['mapfile']+"')");
+    run_next_step();
+}
+function checkme()
+{
+    var rlval = jQuery('#run_loader').val()
+    if (run_in_progress == 1)
+        load_new_run = rlval;
+    else
+        reset_and_run(rlval);
+}
+function load_all_runs(data)
+{
+    htmlz = "<select id='run_loader' onChange='checkme()'>";
+    for(var i=0; i<data.length; i++)
+    {
+        mn = data[i]['file_name'].split('.')[0];
+        htmlz += "<option value='"+data[i]['file_name']+"'>Map: "+mn+" ("+data[i]['time']+")</option>";
+    }
+    htmlz += "</select>";
+    jQuery("#run_selector").html(htmlz);
+    load_js_file('robot_runs/'+data[0]['file_name']);
+}
+function run_next_step()
+{
+    if (load_new_run != "")
+    {
+        reset_and_run(load_new_run);
+        return;
+    }
+    run_in_progress = 1;
+    var step = robot_data['moves'][steps_index];
+    jQuery('#robot_container').html(robot_html);
+    jQuery('#robot').css("-webkit-transform", "rotate("+(step['orientation']*-1)+"deg)");
+    jQuery("#robot").css("top", (480-step['y'])+"px");
+    jQuery("#robot").css("left", step['x']+"px");
+
+    steps_index += 1;
+    if (steps_index < robot_data['moves'].length)
+        setTimeout("run_next_step()", 50);
+    else
+        run_in_progress = 0;
+}
+function reset_and_run(load_it)
+{
+    load_new_run = "";
+    steps_index = 0;
+    load_js_file('robot_runs/'+load_it);
+}
+function load_js_file(fn)
+{
+    $("head").append('<scri' + 'pt src="'+fn+'" type="text/javascript"></scr' + 'ipt>');
+}
+</script>
+</head>
+<body bgcolor=blue>
+<div id='robot_container'></div>
+<div id='map' style="width:640px;height:480px;"></div>
+<hr />
+Select Run: <span id='run_selector'></span>
+</body>
+</html>
